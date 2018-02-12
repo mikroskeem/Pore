@@ -25,10 +25,10 @@
 
 package blue.lapis.pore.command;
 
+import blue.lapis.pore.converter.vector.LocationConverter;
 import blue.lapis.pore.impl.command.PoreCommandSender;
 import blue.lapis.pore.util.PoreText;
 import blue.lapis.pore.util.PoreWrapper;
-
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.command.Command;
 import org.spongepowered.api.command.CommandCallable;
@@ -37,7 +37,10 @@ import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.annotation.NonnullByDefault;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
 
@@ -60,10 +63,12 @@ public class PoreCommandCallable extends PoreWrapper<Command> implements Command
     }
 
     @Override
-    public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
+    public List<String> getSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws CommandException {
         // TODO: Label
-        return getHandle().tabComplete(PoreCommandSender.of(source), getHandle().getLabel(),
-                StringUtils.split(arguments));
+        return getHandle().tabComplete(PoreCommandSender.of(source),
+                getHandle().getLabel(),
+                StringUtils.split(arguments),
+                Optional.ofNullable(targetPosition).map(LocationConverter::of).orElse(null));
     }
 
     @Override
@@ -72,18 +77,16 @@ public class PoreCommandCallable extends PoreWrapper<Command> implements Command
     }
 
     @Override
-    public Optional<? extends Text> getShortDescription(CommandSource source) {
+    public Optional<Text> getShortDescription(CommandSource source) {
         return getHelp(source);
     }
 
     @Override
-    @SuppressWarnings("deprecation")
-    public Optional<? extends Text> getHelp(CommandSource source) {
+    public Optional<Text> getHelp(CommandSource source) {
         return Optional.of(PoreText.convert(getHandle().getDescription()));
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public Text getUsage(CommandSource source) {
         return PoreText.convert(getHandle().getUsage());
     }
