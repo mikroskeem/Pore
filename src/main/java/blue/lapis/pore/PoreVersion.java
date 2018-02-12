@@ -25,7 +25,7 @@
 
 package blue.lapis.pore;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 public final class PoreVersion {
 
@@ -42,7 +42,7 @@ public final class PoreVersion {
     }
 
     private static String nullToUnknown(String s) {
-        return Objects.firstNonNull(s, "UNKNOWN");
+        return MoreObjects.firstNonNull(s, "UNKNOWN");
     }
 
 }
