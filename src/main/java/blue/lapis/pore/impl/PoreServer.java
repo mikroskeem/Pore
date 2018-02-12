@@ -100,7 +100,6 @@ import org.spongepowered.api.boss.ServerBossBar;
 import org.spongepowered.api.command.source.ConsoleSource;
 import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.service.whitelist.WhitelistService;
-import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.channel.MessageChannel;
 import org.spongepowered.api.util.ban.Ban;
 import org.spongepowered.api.world.storage.WorldProperties;
@@ -810,7 +809,7 @@ public class PoreServer extends PoreWrapper<org.spongepowered.api.Server> implem
     public BossBar createBossBar(String title, BarColor color, BarStyle style, BarFlag... flags) {
         List<BarFlag> barFlags = Arrays.asList(flags);
         ServerBossBar bossBar = ServerBossBar.builder()
-                .name(Text.of(title))
+                .name(PoreText.convert(title))
                 .color(BossBarColorConverter.of(color))
                 .overlay(BossBarStyleConverter.of(style))
                 .createFog(barFlags.contains(BarFlag.CREATE_FOG))

@@ -4,6 +4,7 @@ import blue.lapis.pore.converter.type.world.bossbar.BossBarColorConverter;
 import blue.lapis.pore.converter.type.world.bossbar.BossBarStyleConverter;
 import blue.lapis.pore.converter.wrapper.WrapperConverter;
 import blue.lapis.pore.impl.entity.PorePlayer;
+import blue.lapis.pore.util.PoreText;
 import blue.lapis.pore.util.PoreWrapper;
 import com.google.common.collect.ImmutableList;
 import org.bukkit.boss.BarColor;
@@ -13,7 +14,6 @@ import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Player;
 import org.spongepowered.api.boss.ServerBossBar;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.serializer.TextSerializers;
 
 import java.util.List;
 
@@ -32,7 +32,7 @@ public class PoreBossBar extends PoreWrapper<ServerBossBar> implements BossBar {
     @Override
     @SuppressWarnings("deprecation")
     public String getTitle() {
-        return TextSerializers.LEGACY_FORMATTING_CODE.serialize(getHandle().getName());
+        return PoreText.convert(getHandle().getName());
     }
 
     @Override
