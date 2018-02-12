@@ -29,6 +29,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import blue.lapis.pore.Pore;
 import blue.lapis.pore.converter.type.entity.EntityConverter;
+import blue.lapis.pore.converter.type.material.ItemStackConverter;
 import blue.lapis.pore.converter.type.world.BiomeConverter;
 import blue.lapis.pore.converter.type.world.DifficultyConverter;
 import blue.lapis.pore.converter.type.world.EnvironmentConverter;
@@ -41,8 +42,10 @@ import blue.lapis.pore.converter.wrapper.WrapperConverter;
 import blue.lapis.pore.impl.block.PoreBlock;
 import blue.lapis.pore.impl.entity.PoreEntity;
 import blue.lapis.pore.impl.entity.PoreFallingSand;
+import blue.lapis.pore.impl.entity.PoreItem;
 import blue.lapis.pore.impl.entity.PoreLivingEntity;
 import blue.lapis.pore.impl.entity.PorePlayer;
+import blue.lapis.pore.impl.inventory.PoreItemFactory;
 import blue.lapis.pore.util.PoreCollections;
 import blue.lapis.pore.util.PoreWrapper;
 
@@ -81,10 +84,14 @@ import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 import org.spongepowered.api.block.BlockTypes;
+import org.spongepowered.api.data.DataQuery;
+import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.effect.particle.ParticleEffect;
 import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.entity.living.Living;
 import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.cause.EventContext;
+import org.spongepowered.api.event.cause.EventContextKeys;
 import org.spongepowered.api.event.cause.NamedCause;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.explosion.Explosion;
@@ -92,6 +99,7 @@ import org.spongepowered.api.world.extent.Extent;
 import org.spongepowered.api.world.weather.Weathers;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -272,16 +280,17 @@ public class PoreWorld extends PoreWrapper<World> implements org.bukkit.World {
     @Override
     public Item dropItem(Location location, ItemStack item) {
         //noinspection ConstantConditions
-        Optional<org.spongepowered.api.entity.Entity> created =
+        org.spongepowered.api.entity.Entity created =
                 getHandle().createEntity(EntityTypes.ITEM, VectorConverter.create3d(location));
-        if (!created.isPresent()) {
+        org.spongepowered.api.entity.Item drop = (org.spongepowered.api.entity.Item) created;
+
+        drop.offer(Keys.REPRESENTED_ITEM, ItemStackConverter.of(item).createSnapshot());
+        drop.offer(Keys.PICKUP_DELAY, 10);
+
+        if(!getHandle().spawnEntity(drop)) {
             return null;
         }
-
-        org.spongepowered.api.entity.Item drop = (org.spongepowered.api.entity.Item) created.get();
-        //TODO: drop.setPickupDelay(10);
-        //TODO: set ItemStack
-        throw new NotImplementedException("TODO");
+        return PoreItem.of(drop);
     }
 
     @Override
@@ -321,30 +330,14 @@ public class PoreWorld extends PoreWrapper<World> implements org.bukkit.World {
     @Override
     public Entity spawnEntity(Location loc, EntityType type) {
         org.spongepowered.api.entity.Entity entity = getHandle().createEntity(EntityConverter.of(type),
-                VectorConverter.create3d(loc)).orElse(null);
-        if (entity == null) {
+                VectorConverter.create3d(loc));
+
+        if(!getHandle().spawnEntity(entity)) {
             return null;
         }
-
-        getHandle().spawnEntity(entity, Cause.of(NamedCause.source(Pore.getPlugin())));
         return PoreEntity.of(entity);
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
-    public LivingEntity spawnCreature(Location loc, EntityType type) {
-        Entity spawned = spawnEntity(loc, type);
-        if (!(spawned instanceof LivingEntity)) {
-            throw new IllegalArgumentException("Call to spawnCreature non-living entity type");
-        }
-        return (LivingEntity) spawned;
-    }
-
-    @Override
-    @SuppressWarnings("deprecation")
-    public LivingEntity spawnCreature(Location loc, CreatureType type) {
-        return spawnCreature(loc, type.toEntityType());
-    }
 
     @Override
     public LightningStrike strikeLightning(Location loc) {
@@ -522,8 +515,7 @@ public class PoreWorld extends PoreWrapper<World> implements org.bukkit.World {
     @Override
     public boolean createExplosion(Location loc, float power) {
         Explosion explosion = Explosion.builder()
-                .world(((PoreWorld) loc.getWorld()).getHandle())
-                .origin(LocationConverter.toVector3d(loc))
+                .location(LocationConverter.of(loc))
                 .radius(power)
                 .build();
 
@@ -543,17 +535,17 @@ public class PoreWorld extends PoreWrapper<World> implements org.bukkit.World {
 
     @Override
     public long getSeed() {
-        return getHandle().getCreationSettings().getSeed();
+        return getHandle().getProperties().getSeed();
     }
 
     @Override
     public boolean getPVP() {
-        throw new NotImplementedException("TODO");
+        return getHandle().getProperties().isPVPEnabled();
     }
 
     @Override
     public void setPVP(boolean pvp) {
-        throw new NotImplementedException("TODO");
+        getHandle().getProperties().setPVPEnabled(pvp);
     }
 
     @Override
@@ -563,7 +555,11 @@ public class PoreWorld extends PoreWrapper<World> implements org.bukkit.World {
 
     @Override
     public void save() {
-        throw new NotImplementedException("TODO");
+        try {
+            getHandle().save();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -662,22 +658,26 @@ public class PoreWorld extends PoreWrapper<World> implements org.bukkit.World {
 
     @Override
     public Biome getBiome(int x, int z) {
-        return BiomeConverter.of(getHandle().getBiome(x, z));
+        int y = 255; // TODO
+        return BiomeConverter.of(getHandle().getBiome(x, y, z));
     }
 
     @Override
     public void setBiome(int x, int z, Biome bio) {
-        getHandle().setBiome(x, z, BiomeConverter.of(bio));
+        int y = 255; // TODO
+        getHandle().setBiome(x, y, z, BiomeConverter.of(bio));
     }
 
     @Override
     public double getTemperature(int x, int z) {
-        return getHandle().getBiome(x, z).getTemperature();
+        int y = 255; // TODO
+        return getHandle().getBiome(x, y, z).getTemperature();
     }
 
     @Override
     public double getHumidity(int x, int z) {
-        return getHandle().getBiome(x, z).getHumidity();
+        int y = 255; // TODO
+        return getHandle().getBiome(x, y, z).getHumidity();
     }
 
     @Override
@@ -727,7 +727,7 @@ public class PoreWorld extends PoreWrapper<World> implements org.bukkit.World {
 
     @Override
     public WorldType getWorldType() {
-        return GeneratorTypeConverter.of(getHandle().getCreationSettings().getGeneratorType());
+        return GeneratorTypeConverter.of(getHandle().getProperties().getGeneratorType());
     }
 
     @Override
