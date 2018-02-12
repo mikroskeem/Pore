@@ -27,19 +27,18 @@ package blue.lapis.pore.impl;
 
 import blue.lapis.pore.Pore;
 import blue.lapis.pore.converter.type.material.MaterialConverter;
-import blue.lapis.pore.converter.type.statistic.AchievementConverter;
 import blue.lapis.pore.converter.type.statistic.StatisticConverter;
-
 import com.google.common.collect.Iterables;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Statistic;
 import org.bukkit.UnsafeValues;
+import org.bukkit.advancement.Advancement;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.StringUtil;
 import org.spongepowered.api.CatalogType;
 import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.item.ItemType;
-import org.spongepowered.api.statistic.achievement.Achievement;
 
 import java.util.List;
 import java.util.Optional;
@@ -108,29 +107,27 @@ public class PoreUnsafeValues implements UnsafeValues {
 
     @Override
     public org.bukkit.Achievement getAchievementFromInternalName(String name) {
-        Optional<Achievement> ach = Pore.getGame().getRegistry().getType(Achievement.class, name); //TODO is this right?
-        if (ach.isPresent()) {
-            return AchievementConverter.of(ach.get());
-        } else {
-            return null;
-        }
+        return null;
     }
 
     @Override
     public List<String> tabCompleteInternalStatisticOrAchievementName(String token, List<String> completions) {
-        List<String> found = StringUtil.copyPartialMatches(
-                token,
-                Iterables.transform(Pore.getGame().getRegistry().getAllOf(Achievement.class), //TODO is this right?
-                        CatalogType::getName),
-                completions
-        );
-        found.addAll(StringUtil.copyPartialMatches(
+        return StringUtil.copyPartialMatches(
                 token,
                 Iterables.transform(
                         Pore.getGame().getRegistry().getAllOf(org.spongepowered.api.statistic.Statistic.class),
                         CatalogType::getName), //TODO is this right?
                 completions
-        ));
-        return found;
+        );
+    }
+
+    @Override
+    public Advancement loadAdvancement(NamespacedKey key, String advancement) {
+        throw new UnsupportedOperationException("Not supported yet");
+    }
+
+    @Override
+    public boolean removeAdvancement(NamespacedKey key) {
+        throw new UnsupportedOperationException("Not supported yet");
     }
 }
