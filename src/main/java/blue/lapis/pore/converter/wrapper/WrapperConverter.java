@@ -25,6 +25,7 @@
 
 package blue.lapis.pore.converter.wrapper;
 
+import blue.lapis.pore.impl.PoreBossBar;
 import blue.lapis.pore.impl.PoreChunk;
 import blue.lapis.pore.impl.PoreOfflinePlayer;
 import blue.lapis.pore.impl.PoreWorld;
@@ -153,6 +154,7 @@ import org.spongepowered.api.block.tileentity.carrier.Dispenser;
 import org.spongepowered.api.block.tileentity.carrier.Dropper;
 import org.spongepowered.api.block.tileentity.carrier.Furnace;
 import org.spongepowered.api.block.tileentity.carrier.Hopper;
+import org.spongepowered.api.boss.ServerBossBar;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.source.CommandBlockSource;
 import org.spongepowered.api.command.source.ConsoleSource;
@@ -384,6 +386,9 @@ public final class WrapperConverter {
 
             // Well, more or less...
             .register(Location.class, PoreBlock.class)
+
+            // Boss bar
+            .register(ServerBossBar.class, PoreBossBar.class)
 
             // @formatter:on
 

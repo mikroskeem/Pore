@@ -26,9 +26,12 @@
 package blue.lapis.pore.impl;
 
 import blue.lapis.pore.PoreVersion;
+import blue.lapis.pore.converter.type.world.bossbar.BossBarColorConverter;
+import blue.lapis.pore.converter.type.world.bossbar.BossBarStyleConverter;
 import blue.lapis.pore.converter.wrapper.WrapperConverter;
 import blue.lapis.pore.impl.command.PoreCommandMap;
 import blue.lapis.pore.impl.command.PoreConsoleCommandSender;
+import blue.lapis.pore.impl.entity.PoreEntity;
 import blue.lapis.pore.impl.entity.PorePlayer;
 import blue.lapis.pore.impl.help.PoreHelpMap;
 import blue.lapis.pore.impl.scheduler.PoreBukkitScheduler;
@@ -36,27 +39,33 @@ import blue.lapis.pore.impl.util.PoreCachedServerIcon;
 import blue.lapis.pore.util.PoreCollections;
 import blue.lapis.pore.util.PoreText;
 import blue.lapis.pore.util.PoreWrapper;
-
-import com.avaje.ebean.config.ServerConfig;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.NotImplementedException;
 import org.bukkit.BanList;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.UnsafeValues;
 import org.bukkit.Warning;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
+import org.bukkit.advancement.Advancement;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarFlag;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandException;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.command.SimpleCommandMap;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.generator.ChunkGenerator;
@@ -65,6 +74,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemFactory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.Merchant;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.map.MapView;
 import org.bukkit.permissions.Permissible;
@@ -84,11 +94,16 @@ import org.bukkit.util.CachedServerIcon;
 import org.bukkit.util.StringUtil;
 import org.bukkit.util.permissions.DefaultPermissions;
 import org.spongepowered.api.Game;
+import org.spongepowered.api.Platform;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.boss.ServerBossBar;
 import org.spongepowered.api.command.source.ConsoleSource;
 import org.spongepowered.api.service.user.UserStorageService;
+import org.spongepowered.api.service.whitelist.WhitelistService;
+import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.channel.MessageChannel;
-import org.spongepowered.api.util.GuavaCollectors;
 import org.spongepowered.api.util.ban.Ban;
+import org.spongepowered.api.world.storage.WorldProperties;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -96,6 +111,7 @@ import java.io.FileInputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -215,19 +231,12 @@ public class PoreServer extends PoreWrapper<org.spongepowered.api.Server> implem
 
     @Override
     public String getVersion() {
-        return PoreVersion.VERSION + '@' + game.getPlatform().getImplementation().getVersion();
+        return PoreVersion.VERSION + '@' + game.getPlatform().getContainer(Platform.Component.IMPLEMENTATION).getVersion();
     }
 
     @Override
     public String getBukkitVersion() {
-        return PoreVersion.API_VERSION + '@' + game.getPlatform().getApi().getVersion();
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public Player[] _INVALID_getOnlinePlayers() {
-        Collection<? extends Player> online = getOnlinePlayers();
-        return online.toArray(new Player[online.size()]);
+        return PoreVersion.API_VERSION + '@' + game.getPlatform().getContainer(Platform.Component.API).getVersion();
     }
 
     @Override
@@ -308,7 +317,17 @@ public class PoreServer extends PoreWrapper<org.spongepowered.api.Server> implem
 
     @Override
     public Set<OfflinePlayer> getWhitelistedPlayers() {
-        throw new NotImplementedException("TODO");
+        WhitelistService whitelistService = Sponge.getServiceManager()
+                .provideUnchecked(WhitelistService.class);
+        UserStorageService userStorage = Sponge.getServiceManager()
+                .provideUnchecked(UserStorageService.class);
+
+        return whitelistService.getWhitelistedProfiles().stream()
+                .map(userStorage::getOrCreate) // TODO: is this too expensive call?
+                //.filter(Optional::isPresent)
+                //.map(Optional::get)
+                .map(PoreOfflinePlayer::of)
+                .collect(ImmutableSet.toImmutableSet());
     }
 
     @Override
@@ -475,6 +494,11 @@ public class PoreServer extends PoreWrapper<org.spongepowered.api.Server> implem
     }
 
     @Override
+    public void reloadData() {
+        throw new NotImplementedException("TODO");
+    }
+
+    @Override
     public Logger getLogger() {
         return logger;
     }
@@ -501,11 +525,6 @@ public class PoreServer extends PoreWrapper<org.spongepowered.api.Server> implem
         Preconditions.checkNotNull(commandLine, "commandLine");
 
         return commandMap.dispatch(sender, commandLine);
-    }
-
-    @Override
-    public void configureDbConfig(ServerConfig config) {
-        throw new NotImplementedException("TODO");
     }
 
     @Override
@@ -560,18 +579,13 @@ public class PoreServer extends PoreWrapper<org.spongepowered.api.Server> implem
 
     @Override
     public boolean isHardcore() {
-        throw new NotImplementedException("TODO");
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public boolean useExactLoginLocation() {
-        throw new NotImplementedException("TODO");
+        Optional<WorldProperties> defaultWorld = getHandle().getDefaultWorld();
+        return defaultWorld.map(WorldProperties::isHardcore).orElse(false);
     }
 
     @Override
     public void shutdown() {
-        throw new NotImplementedException("TODO");
+        getHandle().shutdown();
     }
 
     @Override
@@ -604,7 +618,7 @@ public class PoreServer extends PoreWrapper<org.spongepowered.api.Server> implem
     @Override
     public Set<String> getIPBans() {
         return PoreBanList.getBanService().getIpBans().stream().map(Ban.Ip::getAddress).map(Object::toString)
-                .collect(GuavaCollectors.toImmutableSet());
+                .collect(ImmutableSet.toImmutableSet());
     }
 
     @Override
@@ -630,7 +644,7 @@ public class PoreServer extends PoreWrapper<org.spongepowered.api.Server> implem
         return PoreBanList.getBanService().getProfileBans().stream().map(Ban.Profile::getProfile)
                 .map(game.getServiceManager().provideUnchecked(UserStorageService.class)::get)
                 .filter(Optional::isPresent).map(Optional::get).map(PoreOfflinePlayer::of)
-                .collect(GuavaCollectors.toImmutableSet());
+                .collect(ImmutableSet.toImmutableSet());
     }
 
     @Override
@@ -707,6 +721,11 @@ public class PoreServer extends PoreWrapper<org.spongepowered.api.Server> implem
     }
 
     @Override
+    public Merchant createMerchant(String title) {
+        throw new NotImplementedException("TODO");
+    }
+
+    @Override
     public int getMonsterSpawnLimit() {
         throw new NotImplementedException("TODO");
     }
@@ -774,17 +793,53 @@ public class PoreServer extends PoreWrapper<org.spongepowered.api.Server> implem
 
     @Override
     public void setIdleTimeout(int threshold) {
-        throw new NotImplementedException("TODO");
+        getHandle().setPlayerIdleTimeout(threshold);
     }
 
     @Override
     public int getIdleTimeout() {
-        throw new NotImplementedException("TODO");
+        return getHandle().getPlayerIdleTimeout();
     }
 
     @Override
     public ChunkGenerator.ChunkData createChunkData(World world) {
         throw new NotImplementedException("TODO");
+    }
+
+    @Override
+    public BossBar createBossBar(String title, BarColor color, BarStyle style, BarFlag... flags) {
+        List<BarFlag> barFlags = Arrays.asList(flags);
+        ServerBossBar bossBar = ServerBossBar.builder()
+                .name(Text.of(title))
+                .color(BossBarColorConverter.of(color))
+                .overlay(BossBarStyleConverter.of(style))
+                .createFog(barFlags.contains(BarFlag.CREATE_FOG))
+                .darkenSky(barFlags.contains(BarFlag.DARKEN_SKY))
+                .playEndBossMusic(barFlags.contains(BarFlag.PLAY_BOSS_MUSIC))
+                .build();
+
+        return PoreBossBar.of(bossBar);
+    }
+
+    @Override
+    public Entity getEntity(UUID uuid) {
+        for(org.spongepowered.api.world.World world : getHandle().getWorlds()) {
+            Optional<org.spongepowered.api.entity.Entity> entity = world.getEntity(uuid);
+            if(entity.isPresent())
+                return PoreEntity.of(entity.get());
+        }
+
+        return null;
+    }
+
+    @Override
+    public Advancement getAdvancement(NamespacedKey key) {
+        return null;
+    }
+
+    @Override
+    public Iterator<Advancement> advancementIterator() {
+        return null;
     }
 
     @Deprecated
