@@ -1,11 +1,11 @@
-From 4feb3b3cc66c1333ed1440ec5d46eea3115b5c56 Mon Sep 17 00:00:00 2001
+From ffe0ece639c049b68fb4fc384a0f99a05499addc Mon Sep 17 00:00:00 2001
 From: Minecrell <dev@minecrell.net>
 Date: Thu, 22 Jan 2015 18:20:44 +0100
 Subject: [PATCH] Disable Spigot version check
 
 
 diff --git a/src/main/java/org/bukkit/command/defaults/VersionCommand.java b/src/main/java/org/bukkit/command/defaults/VersionCommand.java
-index b55abdb..87f54ee 100644
+index 760d58eb..486cd69b 100644
 --- a/src/main/java/org/bukkit/command/defaults/VersionCommand.java
 +++ b/src/main/java/org/bukkit/command/defaults/VersionCommand.java
 @@ -44,7 +44,7 @@ public class VersionCommand extends BukkitCommand {
@@ -34,5 +34,5 @@ index b55abdb..87f54ee 100644
 +    }*/
  }
 -- 
-2.2.2
+2.16.1
 

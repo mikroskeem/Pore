@@ -1,11 +1,11 @@
-From 4876d21ad1258d70667d37133215751f2fec95d8 Mon Sep 17 00:00:00 2001
+From f242d9b57b3d85df0fc126589e560bfb6dde2529 Mon Sep 17 00:00:00 2001
 From: Minecrell <dev@minecrell.net>
 Date: Tue, 3 Mar 2015 22:19:10 +0100
 Subject: [PATCH] Remove final from event getters
 
 
 diff --git a/src/main/java/org/bukkit/event/block/BlockEvent.java b/src/main/java/org/bukkit/event/block/BlockEvent.java
-index 2405205..c0c9b6c 100644
+index 24052051..c0c9b6ce 100644
 --- a/src/main/java/org/bukkit/event/block/BlockEvent.java
 +++ b/src/main/java/org/bukkit/event/block/BlockEvent.java
 @@ -18,7 +18,7 @@ public abstract class BlockEvent extends Event {
@@ -18,10 +18,10 @@ index 2405205..c0c9b6c 100644
      }
  }
 diff --git a/src/main/java/org/bukkit/event/entity/EntityDamageEvent.java b/src/main/java/org/bukkit/event/entity/EntityDamageEvent.java
-index 9ef48c8..4a3a258 100644
+index bd1cc6fc..4eac5a6a 100644
 --- a/src/main/java/org/bukkit/event/entity/EntityDamageEvent.java
 +++ b/src/main/java/org/bukkit/event/entity/EntityDamageEvent.java
-@@ -141,7 +141,7 @@ public class EntityDamageEvent extends EntityEvent implements Cancellable {
+@@ -137,7 +137,7 @@ public class EntityDamageEvent extends EntityEvent implements Cancellable {
       *
       * @return the amount of damage caused by the event
       */
@@ -31,7 +31,7 @@ index 9ef48c8..4a3a258 100644
          for (DamageModifier modifier : MODIFIERS) {
              damage += getDamage(modifier);
 diff --git a/src/main/java/org/bukkit/event/entity/PlayerLeashEntityEvent.java b/src/main/java/org/bukkit/event/entity/PlayerLeashEntityEvent.java
-index 74d458a..07f978a 100644
+index 74d458a8..07f978ac 100644
 --- a/src/main/java/org/bukkit/event/entity/PlayerLeashEntityEvent.java
 +++ b/src/main/java/org/bukkit/event/entity/PlayerLeashEntityEvent.java
 @@ -45,7 +45,7 @@ public class PlayerLeashEntityEvent extends Event implements Cancellable {
@@ -44,7 +44,7 @@ index 74d458a..07f978a 100644
      }
  
 diff --git a/src/main/java/org/bukkit/event/inventory/InventoryCloseEvent.java b/src/main/java/org/bukkit/event/inventory/InventoryCloseEvent.java
-index 19889b2..09550a8 100644
+index 19889b27..09550a86 100644
 --- a/src/main/java/org/bukkit/event/inventory/InventoryCloseEvent.java
 +++ b/src/main/java/org/bukkit/event/inventory/InventoryCloseEvent.java
 @@ -20,7 +20,7 @@ public class InventoryCloseEvent extends InventoryEvent {
@@ -57,7 +57,7 @@ index 19889b2..09550a8 100644
      }
  
 diff --git a/src/main/java/org/bukkit/event/inventory/InventoryOpenEvent.java b/src/main/java/org/bukkit/event/inventory/InventoryOpenEvent.java
-index c3570aa..5755497 100644
+index c3570aae..57554974 100644
 --- a/src/main/java/org/bukkit/event/inventory/InventoryOpenEvent.java
 +++ b/src/main/java/org/bukkit/event/inventory/InventoryOpenEvent.java
 @@ -22,7 +22,7 @@ public class InventoryOpenEvent extends InventoryEvent implements Cancellable {
@@ -70,7 +70,7 @@ index c3570aa..5755497 100644
      }
  
 diff --git a/src/main/java/org/bukkit/event/player/PlayerChannelEvent.java b/src/main/java/org/bukkit/event/player/PlayerChannelEvent.java
-index 054efbc..c44bbf8 100644
+index 054efbc3..c44bbf80 100644
 --- a/src/main/java/org/bukkit/event/player/PlayerChannelEvent.java
 +++ b/src/main/java/org/bukkit/event/player/PlayerChannelEvent.java
 @@ -16,7 +16,7 @@ public abstract class PlayerChannelEvent extends PlayerEvent {
@@ -83,7 +83,7 @@ index 054efbc..c44bbf8 100644
      }
  
 diff --git a/src/main/java/org/bukkit/event/player/PlayerEvent.java b/src/main/java/org/bukkit/event/player/PlayerEvent.java
-index 0d4833f..20106ce 100644
+index 0d4833f6..20106ceb 100644
 --- a/src/main/java/org/bukkit/event/player/PlayerEvent.java
 +++ b/src/main/java/org/bukkit/event/player/PlayerEvent.java
 @@ -24,7 +24,7 @@ public abstract class PlayerEvent extends Event {
@@ -96,7 +96,7 @@ index 0d4833f..20106ce 100644
      }
  }
 diff --git a/src/main/java/org/bukkit/event/vehicle/VehicleEvent.java b/src/main/java/org/bukkit/event/vehicle/VehicleEvent.java
-index b8255c0..b09ef86 100644
+index b8255c01..b09ef863 100644
 --- a/src/main/java/org/bukkit/event/vehicle/VehicleEvent.java
 +++ b/src/main/java/org/bukkit/event/vehicle/VehicleEvent.java
 @@ -18,7 +18,7 @@ public abstract class VehicleEvent extends Event {
@@ -109,7 +109,7 @@ index b8255c0..b09ef86 100644
      }
  }
 diff --git a/src/main/java/org/bukkit/event/weather/WeatherEvent.java b/src/main/java/org/bukkit/event/weather/WeatherEvent.java
-index 0cae9bc..5d88767 100644
+index 0cae9bcb..5d88767a 100644
 --- a/src/main/java/org/bukkit/event/weather/WeatherEvent.java
 +++ b/src/main/java/org/bukkit/event/weather/WeatherEvent.java
 @@ -18,7 +18,7 @@ public abstract class WeatherEvent extends Event {
@@ -122,5 +122,5 @@ index 0cae9bc..5d88767 100644
      }
  }
 -- 
-2.3.1
+2.16.1
 
