@@ -35,6 +35,7 @@ import org.spongepowered.api.scheduler.Task;
 public class PoreBukkitTask extends PoreWrapper<Task> implements BukkitTask {
 
     private final int id;
+    private boolean cancelled = false;
 
     public PoreBukkitTask(Task handle, int id) {
         super(handle);
@@ -57,10 +58,17 @@ public class PoreBukkitTask extends PoreWrapper<Task> implements BukkitTask {
     }
 
     @Override
+    public boolean isCancelled() {
+        return cancelled;
+    }
+
+    @Override
     public void cancel() {
         if (!getHandle().cancel()) {
             throw new RuntimeException("Failed to cancel task " + getTaskId());
         }
+        // TODO: verify if this can be actually used
+        cancelled = true;
     }
 
 }
