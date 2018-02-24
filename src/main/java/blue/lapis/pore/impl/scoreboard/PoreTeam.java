@@ -25,17 +25,17 @@
 
 package blue.lapis.pore.impl.scoreboard;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import blue.lapis.pore.Pore;
-import blue.lapis.pore.converter.type.scoreboard.NameTagVisibilityConverter;
+import blue.lapis.pore.converter.type.scoreboard.CollisionRuleConverter;
+import blue.lapis.pore.converter.type.scoreboard.OptionStatusConverter;
+import blue.lapis.pore.converter.type.text.TextColorConverter;
 import blue.lapis.pore.converter.wrapper.WrapperConverter;
 import blue.lapis.pore.util.PoreText;
 import blue.lapis.pore.util.PoreWrapper;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Sets;
+import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.scoreboard.NameTagVisibility;
 import org.bukkit.scoreboard.Scoreboard;
@@ -43,6 +43,8 @@ import org.spongepowered.api.scoreboard.Team;
 import org.spongepowered.api.text.Text;
 
 import java.util.Set;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 public class PoreTeam extends PoreWrapper<Team> implements org.bukkit.scoreboard.Team {
 
@@ -63,14 +65,12 @@ public class PoreTeam extends PoreWrapper<Team> implements org.bukkit.scoreboard
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public String getDisplayName() throws IllegalStateException {
         checkState();
         return PoreText.convert(getHandle().getDisplayName());
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public void setDisplayName(String displayName) throws IllegalStateException, IllegalArgumentException {
         checkState();
         checkArgument(displayName.length() > MAX_NAME_LENGTH,
@@ -79,14 +79,12 @@ public class PoreTeam extends PoreWrapper<Team> implements org.bukkit.scoreboard
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public String getPrefix() throws IllegalStateException {
         checkState();
         return PoreText.convert(getHandle().getPrefix());
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public void setPrefix(String prefix) throws IllegalStateException, IllegalArgumentException {
         checkState();
         checkArgument(prefix != null, "Prefix must not be null");
@@ -106,6 +104,16 @@ public class PoreTeam extends PoreWrapper<Team> implements org.bukkit.scoreboard
         checkState();
         checkArgument(suffix != null, "Suffix must not be null");
         getHandle().setSuffix(PoreText.convert(suffix));
+    }
+
+    @Override
+    public ChatColor getColor() throws IllegalStateException {
+        return TextColorConverter.of(getHandle().getColor());
+    }
+
+    @Override
+    public void setColor(ChatColor color) {
+        getHandle().setColor(TextColorConverter.of(color));
     }
 
     @Override
@@ -135,14 +143,14 @@ public class PoreTeam extends PoreWrapper<Team> implements org.bukkit.scoreboard
     @Override
     public NameTagVisibility getNameTagVisibility() throws IllegalArgumentException {
         checkState(); // this is technically against documentation but the documentation is stupid for this method
-        return NameTagVisibilityConverter.of(getHandle().getNameTagVisibility());
+        return OptionStatusConverter.toDeprecated(getHandle().getNameTagVisibility());
     }
 
     @Override
     public void setNameTagVisibility(NameTagVisibility visibility) throws IllegalArgumentException {
         checkState(); // same for this
         checkArgument(visibility != null, "Visibility cannot be null");
-        getHandle().setNameTagVisibility(NameTagVisibilityConverter.of(visibility));
+        getHandle().setNameTagVisibility(OptionStatusConverter.fromDeprecated(visibility));
     }
 
     @SuppressWarnings("deprecation")
@@ -233,6 +241,39 @@ public class PoreTeam extends PoreWrapper<Team> implements org.bukkit.scoreboard
             }
         }
         return false;
+    }
+
+    @Override
+    public OptionStatus getOption(Option option) throws IllegalStateException {
+        OptionStatus value = OptionStatus.ALWAYS;
+        switch(option) {
+            case NAME_TAG_VISIBILITY:
+                value = OptionStatusConverter.of(getHandle().getNameTagVisibility());
+                break;
+            case DEATH_MESSAGE_VISIBILITY:
+                value = OptionStatusConverter.of(getHandle().getDeathMessageVisibility());
+                break;
+            case COLLISION_RULE:
+                value = CollisionRuleConverter.of(getHandle().getCollisionRule());
+                break;
+        }
+
+        return value;
+    }
+
+    @Override
+    public void setOption(Option option, OptionStatus status) throws IllegalStateException {
+        switch(option) {
+            case NAME_TAG_VISIBILITY:
+                getHandle().setNameTagVisibility(OptionStatusConverter.of(status));
+                break;
+            case DEATH_MESSAGE_VISIBILITY:
+                getHandle().setDeathMessageVisibility(OptionStatusConverter.of(status));
+                break;
+            case COLLISION_RULE:
+                getHandle().setCollisionRule(CollisionRuleConverter.of(status));
+                break;
+        }
     }
 
     private void checkState() throws IllegalStateException {

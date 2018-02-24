@@ -26,30 +26,29 @@
 package blue.lapis.pore.converter.type.scoreboard;
 
 import blue.lapis.pore.converter.type.TypeConverter;
-
 import com.google.common.base.Converter;
-import org.bukkit.scoreboard.NameTagVisibility;
-import org.spongepowered.api.scoreboard.Visibilities;
-import org.spongepowered.api.scoreboard.Visibility;
+import org.bukkit.scoreboard.Team.OptionStatus;
+import org.spongepowered.api.scoreboard.CollisionRule;
+import org.spongepowered.api.scoreboard.CollisionRules;
 
-public final class NameTagVisibilityConverter {
+public final class CollisionRuleConverter {
 
-    private NameTagVisibilityConverter() {
+    private CollisionRuleConverter() {
     }
 
-    private static final Converter<NameTagVisibility, Visibility> CONVERTER =
-            TypeConverter.builder(NameTagVisibility.class, Visibility.class)
-                    .add(NameTagVisibility.ALWAYS, Visibilities.ALL)
-                    .add(NameTagVisibility.NEVER, Visibilities.NONE)
-                    .add(NameTagVisibility.HIDE_FOR_OTHER_TEAMS, Visibilities.OWN_TEAM)
-                    .add(NameTagVisibility.HIDE_FOR_OWN_TEAM, Visibilities.OTHER_TEAMS)
+    private static final Converter<OptionStatus, CollisionRule> CONVERTER =
+            TypeConverter.builder(OptionStatus.class, CollisionRule.class)
+                    .add(OptionStatus.ALWAYS, CollisionRules.ALWAYS)
+                    .add(OptionStatus.NEVER, CollisionRules.NEVER)
+                    .add(OptionStatus.FOR_OTHER_TEAMS, CollisionRules.PUSH_OTHER_TEAMS)
+                    .add(OptionStatus.FOR_OWN_TEAM, CollisionRules.PUSH_OWN_TEAM)
                     .build();
 
-    public static Visibility of(NameTagVisibility slot) {
+    public static CollisionRule of(OptionStatus slot) {
         return CONVERTER.convert(slot);
     }
 
-    public static NameTagVisibility of(Visibility slot) {
+    public static OptionStatus of(CollisionRule slot) {
         return CONVERTER.reverse().convert(slot);
     }
 
